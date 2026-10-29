@@ -1,0 +1,9 @@
+# Compilados
+dist/
+*.exe
+
+# Credenciales del cliente OAuth de Google: se comparten por fuera del repositorio
+google-oauth.json
+
+# Varios
+*.bak
