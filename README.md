@@ -16,6 +16,15 @@ Doble clic o clic derecho en el widget abre **Ajustes**, donde cada persona conf
 Para moverlo, arrastrarlo a lo largo de la barra de tareas: la posición se recuerda. Los íconos llevan un espaciado
 con 10 px a cada lado (5 px en los anillos).
 
+## Instalar
+
+1. Descargar `TaskbarMonitor.exe` de la [última versión](https://github.com/NEObmonge/taskbar-monitor/releases/latest).
+2. Abrirlo. Si Windows muestra "Windows protegió su PC", tocar **Más información → Ejecutar de todas formas**
+   (la app no está firmada).
+3. La app se instala sola para tu usuario, sin permisos de administrador, y abre **Ajustes** para configurar lo tuyo.
+
+Para desinstalarla: **Configuración → Aplicaciones instaladas → TaskBar Monitor → Desinstalar**.
+
 ## Capturas
 
 Las capturas son simuladas, con datos de ejemplo. Se generan con `tools\screenshots.cs` (compilarlo con `csc` y
@@ -70,9 +79,11 @@ Jira se actualiza cada 5 minutos y el calendario cada 10, o al instante con el b
 
 ## Inicio de sesión con Google
 
-La app usa el flujo OAuth para apps de escritorio (navegador, puerto local y PKCE), con permiso de **solo lectura** del calendario. Necesita el archivo del cliente OAuth junto al `.exe`, con el nombre `google-oauth.json`.
+La app usa el flujo OAuth para apps de escritorio (navegador, puerto local y PKCE), con permiso de **solo lectura** del calendario. El cliente OAuth es de Neotecnologías y tiene público **Interno**: solo pueden iniciar sesión cuentas @neotecnologias.com.
 
-**Este archivo no va en el repositorio:** se comparte por fuera, junto con el `.exe`. Sin él, la fila de Google en Ajustes dice "No configurado" y se puede usar la dirección iCal.
+El `.exe` publicado trae el cliente incrustado. **El archivo no va en el repositorio**: para incrustarlo al compilar,
+dejar `google-oauth.json` junto a `build.ps1`; también sirve ponerlo junto al `.exe` (tiene prioridad). Sin cliente,
+la fila de Google en Ajustes lo indica y se puede usar la dirección iCal.
 
 Para crear un cliente en otra organización:
 

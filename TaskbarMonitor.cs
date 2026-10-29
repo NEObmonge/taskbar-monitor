@@ -72,6 +72,7 @@ static class Program
             if (mode == "--hooks-install") ClaudeHooks.Install(file); else ClaudeHooks.Uninstall(file);
             return;
         }
+        if (Installer.SelfInstall()) return;
         bool created;
         using (var mutex = new Mutex(true, "TaskbarMonitor_SingleInstance", out created))
         {
@@ -593,6 +594,27 @@ static class Installer
         get { return Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Programs), "TaskBar Monitor.lnk"); }
     }
 
+    public static readonly string InstallDir = Path.Combine(
+        Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Programs", "TaskbarMonitor");
+
+    // Abierto desde otra carpeta (por ejemplo Descargas): se copia a su carpeta de instalación, reemplazando la
+    // versión que esté corriendo, y abre esa copia. Devuelve true si esta instancia debe terminar.
+    public static bool SelfInstall()
+    {
+        string exe = Application.ExecutablePath, target = Path.Combine(InstallDir, "TaskbarMonitor.exe");
+        if (string.Equals(Path.GetFullPath(exe), Path.GetFullPath(target), StringComparison.OrdinalIgnoreCase)) return false;
+        try
+        {
+            foreach (var p in Process.GetProcessesByName("TaskbarMonitor"))
+                if (p.Id != Process.GetCurrentProcess().Id) { try { p.Kill(); p.WaitForExit(3000); } catch { } }
+            Directory.CreateDirectory(InstallDir);
+            File.Copy(exe, target, true);
+            Process.Start(target);
+            return true;
+        }
+        catch (Exception ex) { Program.LogError(ex); return false; } // si no se puede copiar, corre desde donde está
+    }
+
     public static void Register()
     {
         string exe = Application.ExecutablePath;
@@ -1042,7 +1064,7 @@ static class Calendar
 
 #region Google Calendar
 // Inicio de sesión con Google para apps de escritorio (navegador + puerto local + PKCE) y lectura del calendario.
-// El cliente OAuth se crea una vez en Google Cloud y su JSON va junto al .exe como google-oauth.json.
+// El cliente OAuth se crea una vez en Google Cloud; su JSON va incrustado en el .exe o junto a él como google-oauth.json.
 static class Google
 {
     const string Scope = "openid email https://www.googleapis.com/auth/calendar.readonly";
@@ -1058,14 +1080,20 @@ static class Google
 
     public static bool SignedIn { get { return Config.GetSecret("GoogleRefreshToken") != ""; } }
 
-    // Lee el JSON tal como lo descarga Google Cloud para un cliente "App de escritorio".
+    // Lee el JSON tal como lo descarga Google Cloud para un cliente "App de escritorio": el archivo junto al .exe
+    // si existe, si no el que build.ps1 incrusta en el .exe.
     static bool ReadClient(out string id, out string secret)
     {
         id = secret = "";
         try
         {
-            if (!File.Exists(ClientFile)) return false;
-            var d = new JavaScriptSerializer().Deserialize<Dictionary<string, object>>(File.ReadAllText(ClientFile));
+            string json = null;
+            if (File.Exists(ClientFile)) json = File.ReadAllText(ClientFile);
+            else
+                using (var s = typeof(Google).Assembly.GetManifestResourceStream("google-oauth.json"))
+                    if (s != null) using (var r = new StreamReader(s)) json = r.ReadToEnd();
+            if (json == null) return false;
+            var d = new JavaScriptSerializer().Deserialize<Dictionary<string, object>>(json);
             var c = Json.Obj(d, "installed") ?? Json.Obj(d, "web") ?? d;
             id = Json.Str(c, "client_id");
             secret = Json.Str(c, "client_secret");
@@ -2156,7 +2184,7 @@ class SettingsForm : Form
         };
         Row(card, "Cuenta de Google", Google.HasClient
             ? "Inicia sesión para que la app lea tus eventos (solo lectura). La sesión se guarda cifrada en este equipo."
-            : "Para usarlo, coloca google-oauth.json junto al .exe de TaskBar Monitor. Mientras tanto puedes usar la dirección iCal.",
+            : "Esta copia no trae el cliente de Google: coloca google-oauth.json junto al .exe. Mientras tanto puedes usar la dirección iCal.",
             googleActions);
         card.Separator();
         calUrl = FieldRow(card, "O dirección secreta iCal",
