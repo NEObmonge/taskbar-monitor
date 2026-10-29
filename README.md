@@ -8,11 +8,31 @@ indicadores que aparecen solo cuando hay algo que mostrar.
 | CPU y RAM | Anillo con el porcentaje. Al pasar el mouse: gráfico de 60 s y procesos que más consumen, con botón para detenerlos. | Administrador de tareas |
 | Compilaciones | Mientras corre MSBuild: repositorio, rama y tiempo; al terminar, si salió bien. | Carpeta del repositorio |
 | Claude | Sesiones de Claude Code y su estado (te pregunta, pide permiso, terminó, trabajando, error). | La sesión más urgente en la app de Claude |
-| Jira | Tus tickets abiertos, agrupados y ordenados como elijas. | La dirección configurada (o tus tickets) |
+| Jira | Tus tickets abiertos, agrupados y ordenados como elijas (ascendente o descendente). | La dirección configurada (o tus tickets) |
 | Repositorios | Repos con cambios sin commit. | Carpeta del repositorio |
 | Calendario | Siempre al final. Muestra el nombre y los minutos de la reunión en curso o de la próxima hora. | Unirse a la reunión |
 
 Doble clic o clic derecho en el widget abre **Ajustes**, donde cada persona configura lo suyo. Todo se aplica al momento.
+Para moverlo, arrastrarlo a lo largo de la barra de tareas: la posición se recuerda. Los íconos usan el mismo espaciado
+que el botón nativo "Mostrar íconos ocultos" (4 px a cada lado).
+
+## Capturas
+
+Las capturas son simuladas, con datos de ejemplo. Se generan con `tools\screenshots.cs` (compilarlo con `csc` y
+ejecutarlo con la carpeta de salida, por ejemplo `docs\screenshots`).
+
+**Barra de tareas** (claro y oscuro): CPU, RAM, Claude, Jira, repositorios y la próxima reunión.
+
+![Barra de tareas, tema claro](docs/screenshots/taskbar-claro.png)
+![Barra de tareas, tema oscuro](docs/screenshots/taskbar-oscuro.png)
+
+| | Claro | Oscuro |
+|---|---|---|
+| CPU y RAM | ![](docs/screenshots/panel-cpu.png) | ![](docs/screenshots/panel-cpu-oscuro.png) |
+| Claude | ![](docs/screenshots/panel-claude.png) | ![](docs/screenshots/panel-claude-oscuro.png) |
+| Jira | ![](docs/screenshots/panel-jira.png) | ![](docs/screenshots/panel-jira-oscuro.png) |
+| Calendario | ![](docs/screenshots/panel-calendario.png) | ![](docs/screenshots/panel-calendario-oscuro.png) |
+| Repositorios | ![](docs/screenshots/panel-repositorios.png) | ![](docs/screenshots/panel-repositorios-oscuro.png) |
 
 ## Requisitos
 

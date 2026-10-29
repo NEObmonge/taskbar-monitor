@@ -123,6 +123,12 @@ static class Config
 
     public static bool Flag(string key) { return Get(key, "1") == "1"; }
 
+    public static int GetInt(string key, int def)
+    {
+        int v;
+        return int.TryParse(Get(key, ""), out v) ? v : def;
+    }
+
     public static string GetSecret(string key)
     {
         string v = Get(key, "");
@@ -1278,13 +1284,15 @@ class JiraInfo
 // Jira Cloud por su API REST, con el correo y un token de API de la persona.
 static class Jira
 {
-    // Orden elegido en Ajustes → cláusula ORDER BY de Jira.
+    // Orden elegido en Ajustes → campo del ORDER BY de Jira; la dirección se elige aparte.
     public static readonly string[,] Sorts =
     {
-        { "updated", "Actualizados recientemente", "updated DESC" }, { "priority", "Prioridad", "priority DESC, updated DESC" },
-        { "rank", "Orden de atención", "rank ASC" }, // el orden en que están priorizados en el tablero o backlog
-        { "created", "Más nuevos primero", "created DESC" }, { "key", "Clave", "key ASC" }
+        { "updated", "Fecha de actualización", "updated" }, { "priority", "Prioridad", "priority" },
+        { "rank", "Orden de atención", "rank" }, // el orden en que están priorizados en el tablero o backlog
+        { "created", "Fecha de creación", "created" }, { "key", "Clave", "key" }
     };
+
+    public static readonly string[,] Directions = { { "desc", "Descendente" }, { "asc", "Ascendente" } };
 
     public static readonly string[,] Groups =
     {
@@ -1293,9 +1301,10 @@ static class Jira
 
     public static string Jql(string sort)
     {
-        string order = "updated DESC";
-        for (int i = 0; i < Sorts.GetLength(0); i++) if (Sorts[i, 0] == sort) order = Sorts[i, 2];
-        return "assignee = currentUser() AND statusCategory != Done ORDER BY " + order;
+        string field = "updated";
+        for (int i = 0; i < Sorts.GetLength(0); i++) if (Sorts[i, 0] == sort) field = Sorts[i, 2];
+        string dir = Config.Get("JiraSortDir", "desc") == "asc" ? "ASC" : "DESC";
+        return "assignee = currentUser() AND statusCategory != Done ORDER BY " + field + " " + dir + (field == "updated" ? "" : ", updated DESC");
     }
 
     public static string Normalize(string site)
@@ -2177,6 +2186,9 @@ class SettingsForm : Form
         Row(card, "Agrupar por", "Cómo se agrupan los tickets en la tarjeta de Jira.", Select(Jira.Groups, "JiraGroup", "status", false));
         card.Separator();
         Row(card, "Ordenar por", "Orden de los tickets dentro de cada grupo.", Select(Jira.Sorts, "JiraSort", "updated", true));
+        card.Separator();
+        Row(card, "Dirección", "Descendente: lo más reciente o importante primero. En \"Orden de atención\", ascendente sigue el orden del tablero.",
+            Select(Jira.Directions, "JiraSortDir", "desc", true));
         card.Finish();
         foreach (var f in new[] { jiraSite, jiraEmail, jiraToken }) f.Box.TextChanged += (o, e) => Restart(jiraDelay);
         jiraDelay.Tick += (o, e) => { jiraDelay.Stop(); ApplyJira(true); };
@@ -2738,11 +2750,45 @@ class MonitorForm : Form
     string pendingClick;
     bool skipNextUp;
 
+    // Arrastrar con el botón izquierdo mueve el widget a lo largo de la barra; la posición se guarda.
+    int offset = (int)Config.GetInt("Offset", 0), dragStartX, dragStartOffset;
+    bool pressing, dragging;
+
+    protected override void OnMouseDown(MouseEventArgs e)
+    {
+        base.OnMouseDown(e);
+        if (e.Button != MouseButtons.Left || vertical) return;
+        pressing = true;
+        dragging = false;
+        dragStartX = Cursor.Position.X;
+        dragStartOffset = offset;
+    }
+
+    protected override void OnMouseMove(MouseEventArgs e)
+    {
+        base.OnMouseMove(e);
+        if (!pressing) return;
+        int dx = Cursor.Position.X - dragStartX;
+        if (!dragging && Math.Abs(dx) < SystemInformation.DragSize.Width) return;
+        if (!dragging) { dragging = true; clickTimer.Stop(); popup.Close(false); Cursor = Cursors.SizeWE; }
+        offset = dragStartOffset + dx;
+        Reposition();
+        Render();
+    }
+
     protected override void OnMouseUp(MouseEventArgs e)
     {
         base.OnMouseUp(e);
         if (e.Button == MouseButtons.Right) { clickTimer.Stop(); OpenSettings(); return; }
         if (e.Button != MouseButtons.Left) return;
+        pressing = false;
+        if (dragging)
+        {
+            dragging = false;
+            Cursor = Cursors.Default;
+            Config.Set("Offset", offset.ToString());
+            return; // un arrastre no es un clic
+        }
         if (skipNextUp) { skipNextUp = false; return; }
         pendingClick = ItemAt(Cursor.Position);
         if (pendingClick == null) return;
@@ -2882,6 +2928,7 @@ class MonitorForm : Form
     // El panel se abre al pasar sobre un indicador y sigue abierto mientras el mouse esté en el indicador o en el panel.
     void TrackMouse()
     {
+        if (dragging) return; // mientras se arrastra no se abren paneles
         var p = Cursor.Position;
         string key = Visible && Bounds.Contains(p) ? ItemAt(p) : null;
         if (key != hovered) { hovered = key; Frame(); }
@@ -2951,7 +2998,9 @@ class MonitorForm : Form
         else
         {
             size.Height = Math.Min(size.Height, taskbar.Height - 4);
-            x = taskbar.Left + margin;
+            // Posición elegida arrastrando el widget; siempre dentro de la barra.
+            offset = Math.Max(0, Math.Min(offset, taskbar.Width - size.Width - 2 * margin));
+            x = taskbar.Left + margin + offset;
             y = taskbar.Top + (taskbar.Height - size.Height) / 2;
         }
         var bounds = new Rectangle(new Point(x, y), size);
@@ -2972,6 +3021,7 @@ class MonitorForm : Form
     float SeparatorSpace { get { return 9 * scale; } }
     float Slot { get { return Math.Min(24 * scale, BoxH - 6 * scale); } } // 24 px: el espacio del ícono, como en los botones nativos
     float Pad { get { return (BoxH - Slot) / 2; } }
+    float HPad { get { return 4 * scale; } }
     float RingD { get { return Slot; } }
     float GlyphSize { get { return 16 * scale; } }
 
@@ -3008,8 +3058,11 @@ class MonitorForm : Form
     {
         // CPU y RAM son solo el anillo: un botón cuadrado de 40 px, como el de Inicio.
         // Solo el calendario lleva texto, y solo cuando hay una reunión en curso o cerca.
-        if (key != "meet" || Line(key) == "") return BoxH;
-        return Pad + Slot + Pad + Measure(g, Line(key)) + Pad;
+        // Relleno horizontal de 4 px, como el botón "Mostrar íconos ocultos": glifos en 24 px, anillos en 32 px.
+        if (vertical) return BoxH;
+        if (key == "cpu" || key == "ram") return HPad + RingD + HPad;
+        if (key != "meet" || Line(key) == "") return HPad + GlyphSize + HPad;
+        return HPad + GlyphSize + 6 * scale + Measure(g, Line(key)) + HPad + 2 * scale;
     }
 
     float Measure(Graphics g, string text)
@@ -3130,8 +3183,8 @@ class MonitorForm : Form
         // Íconos siempre en el color del texto (se leen igual que los nativos); el estado va en un punto de color,
         // como los indicadores que Windows pone sobre los íconos de las apps.
         // El glifo de 16 px va centrado en el espacio de 24 px, igual que el anillo.
-        float slotX = vertical ? r.X + (r.Width - Slot) / 2 : r.X + Pad;
-        var icon = new RectangleF(slotX + (Slot - GlyphSize) / 2, r.Y + (r.Height - GlyphSize) / 2, GlyphSize, GlyphSize);
+        float iconX = vertical || key != "meet" ? r.X + (r.Width - GlyphSize) / 2 : r.X + HPad;
+        var icon = new RectangleF(iconX, r.Y + (r.Height - GlyphSize) / 2, GlyphSize, GlyphSize);
         Color? badge = null;
         float badgePulse = 1;
         switch (key)
@@ -3171,7 +3224,7 @@ class MonitorForm : Form
                 break;
         }
         if (badge.HasValue) DrawBadge(g, icon, a, badge.Value, badgePulse);
-        if (!vertical && key == "meet" && Line(key) != "") DrawLine(g, key, slotX + Slot + Pad, r, a);
+        if (!vertical && key == "meet" && Line(key) != "") DrawLine(g, key, icon.Right + 6 * scale, r, a);
     }
 
     void DrawRing(Graphics g, string key, RectangleF box, float a, float frac, string number, Color arc, float pulse)
