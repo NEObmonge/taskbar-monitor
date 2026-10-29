@@ -3021,7 +3021,7 @@ class MonitorForm : Form
     float SeparatorSpace { get { return 9 * scale; } }
     float Slot { get { return Math.Min(24 * scale, BoxH - 6 * scale); } } // 24 px: el espacio del ícono, como en los botones nativos
     float Pad { get { return (BoxH - Slot) / 2; } }
-    float HPad { get { return 4 * scale; } }
+    float HPad { get { return 6 * scale; } }
     float RingD { get { return Slot; } }
     float GlyphSize { get { return 16 * scale; } }
 

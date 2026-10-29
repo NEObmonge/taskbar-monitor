@@ -52,26 +52,26 @@ static class Screenshots
             g.Clear(bg);
             using (var p = new Pen(light ? Color.FromArgb(220, 220, 220) : Color.FromArgb(50, 50, 50), S)) g.DrawLine(p, 0, 0, w, 0);
             float x = 12 * S, top = 4 * S, box = 40 * S;
-            Ring(g, x, top, 23, "23", fg, fg); x += 32 * S;
-            Ring(g, x, top, 76, "76", Warn, fg); x += 32 * S;
+            Ring(g, x, top, 23, "23", fg, fg); x += 36 * S;
+            Ring(g, x, top, 76, "76", Warn, fg); x += 36 * S;
             using (var p = new Pen(Color.FromArgb(46, fg), S)) g.DrawLine(p, x + 4.5f * S, h * 0.3f, x + 4.5f * S, h * 0.7f);
             x += 9 * S;
-            Glyph(g, x, top, GChat, fg, Clay, bg); x += 24 * S;
-            Glyph(g, x, top, GList, fg, Blue, bg); x += 24 * S;
-            Glyph(g, x, top, GEdit, fg, Warn, bg); x += 24 * S;
+            Glyph(g, x, top, GChat, fg, Clay, bg); x += 28 * S;
+            Glyph(g, x, top, GList, fg, Blue, bg); x += 28 * S;
+            Glyph(g, x, top, GEdit, fg, Warn, bg); x += 28 * S;
             // Calendario con hover, como cuando se pasa el mouse.
             string label = "Daily NEO · 8 min";
             float lw;
             using (var f = Text(12)) lw = g.MeasureString(label, f, PointF.Empty, StringFormat.GenericTypographic).Width;
-            var hov = new RectangleF(x, top, 4 * S + 16 * S + 6 * S + lw + 6 * S, box);
+            var hov = new RectangleF(x, top, 6 * S + 16 * S + 6 * S + lw + 6 * S, box);
             using (var path = Round(hov, 4 * S))
             {
                 using (var b = new SolidBrush(light ? Color.FromArgb(180, 255, 255, 255) : Color.FromArgb(22, 255, 255, 255))) g.FillPath(b, path);
                 using (var p = new Pen(light ? Color.FromArgb(14, 0, 0, 0) : Color.FromArgb(18, 255, 255, 255), S)) g.DrawPath(p, path);
             }
-            DrawGlyph(g, new RectangleF(x + 4 * S, top + 12 * S, 16 * S, 16 * S), GCal, fg);
+            DrawGlyph(g, new RectangleF(x + 6 * S, top + 12 * S, 16 * S, 16 * S), GCal, fg);
             using (var f = Text(12)) using (var b = new SolidBrush(fg))
-                g.DrawString(label, f, b, new RectangleF(x + 26 * S, top, lw + 4 * S, box),
+                g.DrawString(label, f, b, new RectangleF(x + 28 * S, top, lw + 4 * S, box),
                     new StringFormat(StringFormat.GenericTypographic) { LineAlignment = StringAlignment.Center });
         }
         return bmp;
@@ -79,7 +79,7 @@ static class Screenshots
 
     static void Ring(Graphics g, float x, float top, float value, string text, Color arc, Color fg)
     {
-        float d = 24 * S, stroke = 2 * S, cx = x + 4 * S, cy = top + 8 * S;
+        float d = 24 * S, stroke = 2 * S, cx = x + 6 * S, cy = top + 8 * S;
         var c = new RectangleF(cx + stroke / 2, cy + stroke / 2, d - stroke, d - stroke);
         using (var p = new Pen(Color.FromArgb(55, fg), stroke)) g.DrawEllipse(p, c);
         using (var p = new Pen(arc, stroke) { StartCap = LineCap.Round, EndCap = LineCap.Round }) g.DrawArc(p, c, -90, 360 * value / 100);
@@ -89,7 +89,7 @@ static class Screenshots
 
     static void Glyph(Graphics g, float x, float top, string glyph, Color fg, Color badge, Color bg)
     {
-        var icon = new RectangleF(x + 4 * S, top + 12 * S, 16 * S, 16 * S);
+        var icon = new RectangleF(x + 6 * S, top + 12 * S, 16 * S, 16 * S);
         DrawGlyph(g, icon, glyph, fg);
         float d = 8 * S, ring = 1.5f * S, cx = icon.Right - S, cy = icon.Bottom - S;
         using (var b = new SolidBrush(bg)) g.FillEllipse(b, cx - d / 2 - ring, cy - d / 2 - ring, d + 2 * ring, d + 2 * ring);

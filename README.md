@@ -13,8 +13,8 @@ indicadores que aparecen solo cuando hay algo que mostrar.
 | Calendario | Siempre al final. Muestra el nombre y los minutos de la reunión en curso o de la próxima hora. | Unirse a la reunión |
 
 Doble clic o clic derecho en el widget abre **Ajustes**, donde cada persona configura lo suyo. Todo se aplica al momento.
-Para moverlo, arrastrarlo a lo largo de la barra de tareas: la posición se recuerda. Los íconos usan el mismo espaciado
-que el botón nativo "Mostrar íconos ocultos" (4 px a cada lado).
+Para moverlo, arrastrarlo a lo largo de la barra de tareas: la posición se recuerda. Los íconos llevan un espaciado
+con 6 px a cada lado.
 
 ## Capturas
 
