@@ -1,4 +1,4 @@
-﻿// TaskBar Monitor: CPU y RAM en anillos sobre el lado izquierdo de la barra de tareas, más indicadores que aparecen
+// TaskBar Monitor: CPU y RAM en anillos sobre el lado izquierdo de la barra de tareas, más indicadores que aparecen
 // solo cuando hay algo que mostrar (compilación, sesiones de Claude, próxima reunión, Jira y repositorios con
 // cambios). Al pasar el mouse sobre cada indicador se abre su panel, que se puede usar (detener procesos, abrir
 // tickets, unirse a la reunión...). Un clic en un indicador hace su acción (CPU/RAM abren el Administrador de tareas,
@@ -3021,7 +3021,8 @@ class MonitorForm : Form
     float SeparatorSpace { get { return 9 * scale; } }
     float Slot { get { return Math.Min(24 * scale, BoxH - 6 * scale); } } // 24 px: el espacio del ícono, como en los botones nativos
     float Pad { get { return (BoxH - Slot) / 2; } }
-    float HPad { get { return 6 * scale; } }
+    float HPad { get { return 10 * scale; } }
+    float RingPad { get { return 5 * scale; } }
     float RingD { get { return Slot; } }
     float GlyphSize { get { return 16 * scale; } }
 
@@ -3060,7 +3061,7 @@ class MonitorForm : Form
         // Solo el calendario lleva texto, y solo cuando hay una reunión en curso o cerca.
         // Relleno horizontal de 4 px, como el botón "Mostrar íconos ocultos": glifos en 24 px, anillos en 32 px.
         if (vertical) return BoxH;
-        if (key == "cpu" || key == "ram") return HPad + RingD + HPad;
+        if (key == "cpu" || key == "ram") return RingPad + RingD + RingPad;
         if (key != "meet" || Line(key) == "") return HPad + GlyphSize + HPad;
         return HPad + GlyphSize + 6 * scale + Measure(g, Line(key)) + HPad + 2 * scale;
     }

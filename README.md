@@ -14,7 +14,7 @@ indicadores que aparecen solo cuando hay algo que mostrar.
 
 Doble clic o clic derecho en el widget abre **Ajustes**, donde cada persona configura lo suyo. Todo se aplica al momento.
 Para moverlo, arrastrarlo a lo largo de la barra de tareas: la posición se recuerda. Los íconos llevan un espaciado
-con 6 px a cada lado.
+con 10 px a cada lado (5 px en los anillos).
 
 ## Capturas
 
